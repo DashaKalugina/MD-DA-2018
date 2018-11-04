@@ -1,0 +1,70 @@
+Модифицируйте код из предыдущей лекции (функцию estimate.scaling.exponent), чтобы он возвращал список a и y0
+```{r}
+gmp <- read.table(file="gmp.dat")
+
+gmp$pop <- gmp$gmp / gmp$pcgmp
+
+estimate.scaling.exponent <- function(a, y0=6611, response=gmp$pcgmp,
+                                        predictor = gmp$pop, maximum.iterations=100, deriv.step = 1/100,
+                                        step.scale = 1e-12, stopping.deriv = 1/100) {
+  mse <- function(a) { mean((response - y0*predictor^a)^2) }
+  for (iteration in 1:maximum.iterations) {
+    deriv <- (mse(a+deriv.step) - mse(a))/deriv.step
+    a <- a - step.scale*deriv
+    if (abs(deriv) <= stopping.deriv) { break() }
+  }
+  fit <- list(a=a,iterations=iteration,
+              converged=(iteration < maximum.iterations))
+  res <- c(a, y0)
+  names(res) <- c("Коэффициент","Стартовая точка")
+  return(res)
+}
+```
+
+```{r}
+estimate.scaling.exponent(a=0.15, y0=3000)
+estimate.scaling.exponent(a=0.15, y0=4000)
+estimate.scaling.exponent(a=0.15, y0=5000)
+```
+
+Рекурсивная функция факториала:
+
+```{r}
+factorial <- function(n) {
+stopifnot(n>=0) # проверка корректности n>=0
+  if (n==1 || n==0) return(1)
+  return(n*factorial(n-1))
+}
+
+# проверка функции факториала
+
+numbers <- c(0:10)
+res.1 <- vector(mode = "integer", length = length(numbers)) # в вектор будем записывать рез-ты
+for (i in 1:length(numbers)){
+  res.1[i]=factorial(numbers[i])
+}
+
+df.1 <- data.frame(Number=numbers, Factorial=res.1)
+df.1
+```
+
+Рекурсивная функция Фибоначчи:
+
+```{r}
+fibonacci <- function(n){
+  stopifnot(n>=0) # проверка корректности n>=0
+  if (n==0) return(0)
+  if (n==1 || n==2) return(1)
+  return(fibonacci(n-1)+fibonacci(n-2))
+}
+
+# проверка функции Фибоначчи
+indexes <- c(0:10)
+res.2 <- vector(mode = "integer", length = length(indexes)) # вектор чисел Фибоначчи
+for (i in 1:length(indexes)){
+  res.2[i]=fibonacci(indexes[i])
+}
+
+df.2 <- data.frame(Index=indexes, Number=res.2)
+df.2
+```
