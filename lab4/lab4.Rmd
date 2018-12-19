@@ -1,0 +1,260 @@
+---
+title: "Untitled"
+author: "DashaKalugina"
+date: '4 ноября 2018 г '
+output: html_document
+---
+
+Пользуясь примером из лекции файл (5.0.R) проанализируйте данные о возрасте и физ. характеристиках молюсков (https://archive.ics.uci.edu/ml/datasets/abalone)
+
+```{r}
+data <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/abalone/abalone.data", header=TRUE, sep=",")
+summary(data)
+colnames(data)
+colnames(data) <- c("sex", "length", "diameter", "height", 
+                "whole_weight", "shucked_weight",
+                "viscera_weight", "shell_weight", "rings")
+colnames(data)
+```
+
+```{r}
+data$sex <- factor(c("Female", "Infant", "Male")[data$sex])
+```
+
+Гистограммы распределения значений диаметра, высоты и полного веса моллюсков:
+
+```{r}
+# функция par(mfrow=c(nrows, ncols)) позволяет комбинировать несколько графиков
+par(mfrow=c(1,3)) 
+hist(data$diameter, main = "Диаметр, мм")
+hist(data$height, main = "Высота, мм")
+hist(data$whole_weight, main = "Полный вес, гр")
+```
+
+Визуализация возможных зависимостей полного веса от диаметра и веса от высоты:
+
+```{r}
+par(mfrow=c(1,2)) 
+plot(data$diameter, data$whole_weight,'p',main = "Зависимость веса от диаметра")
+plot(data$height, data$whole_weight,'p',main = "Зависимость веса от высоты")
+```
+
+Зависимости хорошо видны, построим соответствующие линейные модели при помощи функции lm:
+
+- Зависимость полного веса моллюска от его диаметра:
+
+```{r}
+linear.model.1 <- lm(whole_weight ~ diameter, data=data) # зависимость веса от диаметра
+summary(linear.model.1)
+plot(linear.model.1)
+```
+
+- Зависимость полного веса моллюска от его высоты:
+
+```{r}
+linear.model.2 <- lm(whole_weight ~ height, data=data)# зависимость веса от высоты
+summary(linear.model.2)
+plot(linear.model.2)
+```
+
+- Зависимость полного веса моллюска от всех параметров:
+
+```{r}
+linear.model.3 <- lm(whole_weight ~ ., data=data)
+summary(linear.model.3)
+plot(linear.model.3)
+```
+
+- Зависимость полного веса моллюска от параметров __shucked_weight__, __viscera_weight__, __shell_weight__ и __rings__:
+
+```{r}
+linear.model.4 <- lm(whole_weight ~ +shucked_weight +viscera_weight +shell_weight +rings, data=data)
+summary(linear.model.4)
+plot(linear.model.4)
+```
+
+Построим диаграммы размаха для наглядного отображения наличия выбросов в исходном наборе данных:
+
+```{r}
+par(mfrow=c(1,3))
+boxplot(data$diameter, main="Диаметр")
+boxplot(data$height, main="Высота")
+boxplot(data$whole_weight, main="Полный вес")
+#избавиться от выборосов, построить ещё модели и проверить их
+#разделить массив данных на 2 случайные части
+#подогнать модель по первой части
+#спрогнозировать (функция predict) значения во второй части
+#проверить качество прогноза
+```
+Диаграммы рассеяния упорядоченных значений диаметра, высоты и полного веса моллюсков:
+
+```{r}
+plot(sort(data$diameter), main = "Диаметр, мм")
+plot(sort(data$height), main = "Высота, мм")
+plot(sort(data$whole_weight), main = "Полный вес, гр")
+```
+
+Избавляемся от выбросов в наборе данных:
+
+```{r}
+library(dplyr)
+data <- data %>%
+  filter(diameter>0.26 & diameter<0.52) %>%
+  filter(height>0.08 & height<0.18) %>%
+  filter(whole_weight>0.2 & whole_weight<1.4)
+```
+
+Гистограммы распределения после удаления выбросов:
+
+```{r}
+par(mfrow=c(1,3)) 
+hist(data$diameter, main = "Диаметр, мм")
+hist(data$height, main = "Высота, мм")
+hist(data$whole_weight, main = "Полный вес, гр")
+```
+
+Зависимости полного веса от диаметра от высоты после удаления выбросов:
+
+```{r}
+par(mfrow=c(1,2)) 
+plot(data$diameter, data$whole_weight,'p',main = "Зависимость веса от диаметра")
+plot(data$height, data$whole_weight,'p',main = "Зависимость веса от высоты")
+```
+
+Диаграммы размаха после удаления выбросов:
+
+```{r}
+par(mfrow=c(1,3))
+boxplot(data$diameter, main="Диаметр")
+boxplot(data$height, main="Высота")
+boxplot(data$whole_weight, main="Полный вес")
+```
+
+Построение новых линейных моделей на данных без выбросов:
+
+- Модель зависимости полного веса моллюска от его диаметра:
+```{r}
+linear.model.1.noout <- lm(whole_weight ~ diameter, data=data) # зависимость веса от диаметра
+summary(linear.model.1.noout)
+plot(linear.model.1.noout)
+```
+
+- Модель зависимости полного веса моллюска от его высоты:
+
+```{r}
+linear.model.2.noout <- lm(whole_weight ~ height, data=data)# зависимость веса от высоты
+summary(linear.model.2.noout)
+plot(linear.model.2.noout)
+```
+
+- Модель зависимости полного веса моллюска от всех возможных параметров:
+
+```{r}
+linear.model.3.noout <- lm(whole_weight ~ ., data=data)
+summary(linear.model.3.noout)
+plot(linear.model.3.noout)
+```
+
+- Модель зависимости полного веса моллюска от параметров __shucked_weight__, __viscera_weight__, __shell_weight__ и __rings__:
+
+```{r}
+linear.model.4.noout <- lm(whole_weight ~ +shucked_weight +viscera_weight +shell_weight +rings, data=data)
+summary(linear.model.4.noout)
+plot(linear.model.4.noout)
+```
+
+Разделим массив данных для предсказания значений:
+
+```{r}
+odds <- seq(1, nrow(data), by=2)
+data.in <- data[odds,] # data[1,], data[3,] ...
+data.out <- data[-odds,] # data[2,], data[4,] ...
+```
+
+Построение линейных моделей с помощью тренировочного набора данных.
+
+- Модель 1 (зависимость полного веса моллюска от его диаметра)
+
+```{r}
+linear.model.half.1 <- lm(whole_weight ~ diameter, data=data.in) # тренировка лин. модели по набору данных data.in
+summary(linear.model.half.1)
+```
+
+```{r}
+weight.predict.1 <- predict(linear.model.half.1, data.in)
+cor(data.in$whole_weight, weight.predict.1)
+plot(data.in$whole_weight, weight.predict.1)
+```
+
+```{r}
+weight.predict.out.1 <- predict(linear.model.half.1, data.out) # предсказание значений по валидационному набору
+#cor(data.out$whole_weight, weight.predict.out.1)
+plot(data.out$whole_weight, weight.predict.out.1)
+```
+
+Полученное значение корреляции: `r cor(data.out$whole_weight, weight.predict.out.1)`
+
+- Модель 2 (зависимость полного веса моллюска от его высоты)
+
+```{r}
+linear.model.half.2 <- lm(whole_weight ~ height, data=data.in) # тренировка лин. модели по набору данных data.in
+summary(linear.model.half.2)
+```
+
+```{r}
+weight.predict.2 <- predict(linear.model.half.2, data.in)
+cor(data.in$whole_weight, weight.predict.2)
+plot(data.in$whole_weight, weight.predict.2)
+```
+
+```{r}
+weight.predict.out.2 <- predict(linear.model.half.2, data.out)# предсказание значений по валидационному набору
+#cor(data.out$whole_weight, weight.predict.out.2)
+plot(data.out$whole_weight, weight.predict.out.2)
+```
+
+Полученное значение корреляции: `r cor(data.out$whole_weight, weight.predict.out.2)`
+
+- Модель 3 (зависимости полного веса моллюска от всех возможных параметров)
+
+```{r}
+linear.model.half.3 <- lm(whole_weight ~ ., data=data.in) # тренировка лин. модели по набору данных data.in
+summary(linear.model.half.3)
+```
+
+```{r}
+weight.predict.3 <- predict(linear.model.half.3, data.in)
+cor(data.in$whole_weight, weight.predict.3)
+plot(data.in$whole_weight, weight.predict.3)
+```
+
+```{r}
+weight.predict.out.3 <- predict(linear.model.half.3, data.out)# предсказание значений по валидационному набору
+#cor(data.out$whole_weight, weight.predict.out.3)
+plot(data.out$whole_weight, weight.predict.out.3)
+```
+
+Полученное значение корреляции: `r cor(data.out$whole_weight, weight.predict.out.3)`
+
+- Модель 4 (зависимость веса моллюска от параметров __shucked_weight__, __viscera_weight__, __shell_weight__ и __rings__)
+
+```{r}
+linear.model.half.4 <- lm(whole_weight ~ +shucked_weight +viscera_weight +shell_weight +rings, data=data.in) # тренировка лин. модели по набору данных data.in
+summary(linear.model.half.4)
+```
+
+```{r}
+weight.predict.4 <- predict(linear.model.half.4, data.in)
+cor(data.in$whole_weight, weight.predict.4)
+plot(data.in$whole_weight, weight.predict.4)
+```
+
+```{r}
+weight.predict.out.4 <- predict(linear.model.half.4, data.out)# предсказание значений по валидационному набору
+#cor(data.out$whole_weight, weight.predict.out.4)
+plot(data.out$whole_weight, weight.predict.out.4)
+```
+
+Полученное значение корреляции: `r cor(data.out$whole_weight, weight.predict.out.4)`
+
+Наибольшее значение корреляции соответсвует модели зависимости веса моллюска от четырех параметров: __shucked_weight__, __viscera_weight__, __shell_weight__ и __rings__. Наименьшее значение соответствует модели зависимотси веса моллюска от его высоты.
